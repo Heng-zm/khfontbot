@@ -1,0 +1,928 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bot Command Center</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fira+Code&display=swap" rel="stylesheet">
+    <style>
+        :root { 
+            --primary-color: #3b82f6; --primary-hover: #2563eb;
+            --success-color: #10b981; --danger-color: #ef4444; --warning-color: #f59e0b;
+            --bg-dark-1: #0D1117; --bg-dark-2: #161B22; --bg-dark-3: #21262D;
+            --border-color: #30363d;
+            --text-primary: #e6edf3; --text-secondary: #7d8590;
+            --info-color: #3b82f6;
+        }
+        *, *::before, *::after { box-sizing: border-box; }
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            background-color: var(--bg-dark-1);
+            color: var(--text-primary);
+        }
+        .dashboard-layout { display: flex; min-height: 100vh; }
+        .sidebar {
+            width: 260px;
+            background-color: var(--bg-dark-2);
+            border-right: 1px solid var(--border-color);
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+            transition: width 0.2s ease, padding 0.2s ease, transform 0.2s ease;
+            will-change: transform;
+        }
+ .editor-textarea { width: 100%; border: 1px solid var(--border-color); padding: 12px; resize: vertical; min-height: 80px; font-size: 1rem; background-color: var(--bg-dark-1); color: var(--text-primary); border-radius: 6px; transition: border-color 0.2s; font-family: inherit; }
+        .editor-textarea:focus { outline: none; border-color: var(--primary-color); box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); }
+        .markdown-help { font-size: 0.8rem; color: var(--text-secondary); margin-top: 4px; }
+        .sidebar.collapsed { width: 88px; padding: 24px 12px; }
+        .sidebar-header { display: flex; align-items: center; gap: 12px; margin-bottom: 32px; }
+        .sidebar-header .logo { width: 32px; height: 32px; background: linear-gradient(45deg, #3b82f6, #60a5fa); border-radius: 8px; color: white; display: grid; place-items: center; font-weight: bold; font-size: 1.25rem; flex-shrink: 0; }
+        .sidebar.collapsed .sidebar-header h1, .sidebar.collapsed .nav-item .nav-text, .sidebar.collapsed .sidebar-footer .label { display: none; }
+        .sidebar-header h1 { font-size: 1.25rem; font-weight: 600; margin: 0;}
+        .nav-menu { flex-grow: 1; }
+        .nav-list { list-style: none; padding: 0; margin: 0; }
+        .nav-item a { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 6px; text-decoration: none; color: var(--text-secondary); font-weight: 500; transition: all 0.2s; white-space: nowrap; overflow: hidden;}
+        .sidebar.collapsed .nav-item a { justify-content: center; }
+        .nav-item a:hover { background-color: var(--bg-dark-3); color: white; }
+        .nav-item a.active { background-color: var(--primary-color); color: white; }
+        .nav-item a svg { width: 20px; height: 20px; flex-shrink: 0; }
+        .sidebar-footer { margin-top: auto; }
+        #sidebarToggle { width: 100%; background-color: var(--bg-dark-3); color: var(--text-secondary); border: none; padding: 10px; border-radius: 8px; cursor: pointer; font-size: 1.5rem; line-height: 1; display: flex; align-items: center; justify-content: center; gap: 10px; }
+        
+        .main-content { flex-grow: 1; padding: 32px; overflow-y: auto; }
+        .main-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+        .main-header h2 { font-size: 1.75rem; font-weight: 700; }
+        .mobile-menu-btn { display: none; background-color: var(--bg-dark-3); color: var(--text-primary); border: 1px solid var(--border-color); padding: 8px 10px; border-radius: 6px; cursor: pointer; margin-right: 12px; }
+        
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: fadeIn 0.4s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        
+        .grid { display: grid; gap: 24px; }
+        .command-center-grid { grid-template-columns: minmax(280px, 360px) minmax(280px, 360px) 1fr; gap: 20px; }
+        .column { display: flex; flex-direction: column; gap: 24px; }
+        
+        .card { background-color: var(--bg-dark-2); border-radius: 10px; border: 1px solid var(--border-color); padding: 24px; display: flex; flex-direction: column; box-shadow: 0 2px 8px rgba(0,0,0,0.1); transition: box-shadow 0.3s; }
+        .card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.15); }
+        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; padding-bottom: 16px; border-bottom: 2px solid var(--border-color); }
+        h3 { font-size: 1.125rem; font-weight: 600; margin: 0; display: flex; align-items: center; gap: 10px; color: var(--text-primary); }
+        h3 svg { width: 20px; height: 20px; color: var(--text-secondary); }
+        .count { background: linear-gradient(135deg, var(--primary-color), #60a5fa); color: white; font-weight: 600; font-size: 0.8rem; padding: 4px 12px; border-radius: 999px; min-width: 24px; text-align: center; box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3); }
+        
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .stat-card { background-color: var(--bg-dark-3); padding: 20px 16px; border-radius: 8px; text-align: center; transition: all 0.2s; border: 1px solid transparent; }
+        .stat-card:hover { border-color: var(--primary-color); transform: translateY(-2px); }
+        .stat-card .value { font-size: 2.25rem; font-weight: 700; background: linear-gradient(135deg, var(--primary-color), #60a5fa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .stat-card .label { font-size: 0.875rem; color: var(--text-secondary); margin-top: 6px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
+        
+        .item-list { list-style: none; padding: 0; margin: 0; overflow-y: auto; flex-grow: 1; min-height: 150px; max-height: 400px; scrollbar-width: thin; scrollbar-color: var(--border-color) transparent; }
+        .item-list::-webkit-scrollbar { width: 6px; }
+        .item-list::-webkit-scrollbar-track { background: transparent; }
+        .item-list::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px; }
+        .item-list li { display: flex; justify-content: space-between; align-items: center; padding: 14px 12px; border-bottom: 1px solid var(--border-color); transition: background-color 0.2s; }
+        .item-list li:hover { background-color: var(--bg-dark-3); }
+        .item-list li:last-child { border-bottom: none; }
+        .action-btn { padding: 8px 16px; margin: 0 4px; font-size: 0.875rem; font-weight: 500; cursor: pointer; border: none; border-radius: 6px; color: white; transition: all 0.2s; white-space: nowrap; }
+        .action-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 8px rgba(0,0,0,0.2); }
+        .action-btn:active { transform: translateY(0); }
+        .approve-btn { background-color: var(--success-color); } 
+        .approve-btn:hover { background-color: #059669; }
+        .reject-btn, .ban-btn { background-color: var(--danger-color); }
+        .reject-btn:hover, .ban-btn:hover { background-color: #dc2626; }
+        .unban-btn { background-color: #6b7280; }
+        .unban-btn:hover { background-color: #4b5563; }
+        
+        .controls { display: flex; gap: 10px; margin-top: 16px; }
+        .controls input, .controls textarea { flex-grow: 1; min-width: 0; padding: 10px 12px; border: 1px solid var(--border-color); border-radius: 6px; font-size: 1rem; background-color: var(--bg-dark-1); color: var(--text-primary); transition: border-color 0.2s; }
+        .controls input:focus, .controls textarea:focus { outline: none; border-color: var(--primary-color); box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); }
+        .controls button { background-color: var(--primary-color); color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: 500; transition: all 0.2s; }
+        .controls button:hover { background-color: var(--primary-hover); transform: translateY(-1px); box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3); }
+        .controls button:active { transform: translateY(0); }
+        .controls button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+        .clear-log-btn { background-color: var(--bg-dark-3); color: var(--text-secondary); border: 1px solid var(--border-color); padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 500; font-size: 0.875rem; transition: all 0.2s; display: flex; align-items: center; gap: 6px; white-space: nowrap; }
+        .clear-log-btn:hover { background-color: var(--danger-color); color: white; border-color: var(--danger-color); transform: translateY(-1px); box-shadow: 0 4px 8px rgba(239, 68, 68, 0.3); }
+        .clear-log-btn:active { transform: translateY(0); }
+        .auto-scroll-btn { background-color: var(--primary-color); color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-weight: 500; font-size: 0.75rem; transition: all 0.2s; display: flex; align-items: center; gap: 4px; white-space: nowrap; }
+        .auto-scroll-btn:hover { background-color: var(--primary-hover); transform: translateY(-1px); box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3); }
+        .auto-scroll-btn.disabled { background-color: var(--bg-dark-3); color: var(--text-secondary); border: 1px solid var(--border-color); }
+        .auto-scroll-btn.disabled:hover { background-color: var(--bg-dark-3); transform: none; box-shadow: none; }
+        .format-btn:hover { background-color: var(--primary-color) !important; border-color: var(--primary-color) !important; transform: translateY(-1px); box-shadow: 0 2px 6px rgba(59, 130, 246, 0.3); }
+        .format-btn:active { transform: translateY(0); }
+        .log-container { height: calc(100vh - 200px); overflow-y: auto; font-family: 'Fira Code', monospace; font-size: 0.85em; background-color: var(--bg-dark-1); border-radius: 6px; padding: 12px; line-height: 1.6; scrollbar-width: thin; scrollbar-color: var(--border-color) transparent; border: 1px solid var(--border-color); }
+        .log-container::-webkit-scrollbar { width: 8px; }
+        .log-container::-webkit-scrollbar-track { background: transparent; }
+        .log-container::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px; }
+        .log-container::-webkit-scrollbar-thumb:hover { background: var(--text-secondary); }
+        .log-entry { padding: 10px 12px; margin-bottom: 4px; word-wrap: break-word; border-radius: 4px; border-left: 3px solid transparent; background-color: rgba(255, 255, 255, 0.02); transition: all 0.2s; }
+        .log-entry:hover { background-color: rgba(255, 255, 255, 0.05); transform: translateX(2px); }
+        .log-entry .log-time { color: var(--text-secondary); font-size: 0.8em; margin-right: 8px; }
+        .log-entry .log-level { padding: 2px 6px; border-radius: 3px; font-size: 0.75em; font-weight: 600; margin-right: 8px; display: inline-block; }
+        .log-info { border-left-color: var(--info-color); }
+        .log-info .log-level { background-color: rgba(59, 130, 246, 0.2); color: #60a5fa; }
+        .log-warn { border-left-color: var(--warning-color); }
+        .log-warn .log-level { background-color: rgba(245, 158, 11, 0.2); color: #fbbf24; }
+        .log-error { border-left-color: var(--danger-color); }
+        .log-error .log-level { background-color: rgba(239, 68, 68, 0.2); color: #f87171; }
+        .log-success { border-left-color: var(--success-color); }
+        .log-success .log-level { background-color: rgba(16, 185, 129, 0.2); color: #34d399; }
+        .log-empty { text-align: center; padding: 40px 20px; color: var(--text-secondary); font-style: italic; }
+        .log-warn { color: #f59e0b; } .log-error { color: #ef4444; }
+        
+        .user-list-table { width: 100%; border-collapse: collapse; }
+        .user-list-table th, .user-list-table td { text-align: left; padding: 12px; border-bottom: 1px solid var(--border-color); }
+        .user-list-table th { font-weight: 500; font-size: 0.875rem; color: var(--text-secondary); text-transform: uppercase; }
+        .user-status-banned { color: var(--danger-color); font-weight: bold; }
+        .user-status-active { color: var(--success-color); }
+
+        .progress-bar { width: 100%; background-color: var(--bg-dark-3); border-radius: 6px; overflow: hidden; height: 12px; margin-top: 10px; border: 1px solid var(--border-color); }
+        .progress-bar-inner { height: 100%; background: linear-gradient(90deg, var(--success-color), #10b981); transition: width 0.5s ease; box-shadow: 0 0 10px rgba(16, 185, 129, 0.3); }
+        
+        #toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
+        .toast { padding: 16px; border-radius: 8px; color: white; font-weight: 500; box-shadow: 0 4px 12px rgba(0,0,0,0.15); opacity: 0; transform: translateY(20px); animation: slideInUp 0.5s forwards; margin-top: 10px;}
+        .toast.hide { animation: slideOutDown 0.5s forwards; }
+        .toast-success { background-color: var(--success-color); } .toast-error { background-color: var(--danger-color); } .toast-info { background-color: #0dcaf0; }
+        @keyframes slideInUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes slideOutDown { from { transform: translateY(0); opacity: 1; } to { transform: translateY(20px); opacity: 0; } }
+
+        @media (max-width: 1200px) { .command-center-grid { grid-template-columns: 1fr 1fr; } .right-column { grid-column: 1 / -1; margin-top: 24px; } }
+        @media (max-width: 768px) {
+            .command-center-grid { grid-template-columns: 1fr; }
+            .mobile-menu-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+            .sidebar { position: fixed; left: 0; top: 0; bottom: 0; width: min(85vw, 320px); transform: translateX(-100%); display: block; z-index: 1001; box-shadow: 2px 0 12px rgba(0,0,0,0.4); }
+            .sidebar.open { transform: translateX(0); }
+            .sidebar-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; }
+            .sidebar-backdrop.visible { display: block; }
+            .main-content { padding: 16px; }
+        }
+    </style>
+</head>
+<body>
+    <div id="toast-container"></div>
+    <div class="dashboard-layout">
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header"><div class="logo">B</div><h1>Command Center</h1></div>
+            <nav class="nav-menu"><ul class="nav-list" id="navMenu">
+                <li class="nav-item">
+                    <a href="#" class="nav-link active" data-tab="dashboard">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3v11.25A2.25 2.25 0 006 16.5h12M3.75 3h16.5M3.75 3v-1.5A2.25 2.25 0 016 0h12a2.25 2.25 0 012.25 2.25v1.5M3.75 16.5v2.25A2.25 2.25 0 006 21h12a2.25 2.25 0 002.25-2.25V16.5m-14.25-8.25h12.75" /></svg>
+                        <span class="nav-text">Dashboard</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link" data-tab="users">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-2.43M15 19.128v-3.872M15 19.128l-2.625-.372a9.337 9.337 0 01-4.121-2.43m-4.29 4.815a9.337 9.337 0 01-4.121-2.43M3.75 14.628l2.625.372a9.337 9.337 0 014.121 2.43M3.75 14.628v-3.872m0 0l2.625-.372a9.337 9.337 0 014.121-2.43m-4.29-4.816a9.337 9.337 0 014.121-2.43L15 4.872v-3.872m0 0l2.625.372a9.337 9.337 0 014.121 2.43M12 10.5a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm0 0l2.625.372a9.337 9.337 0 014.121 2.43M12 10.5l-2.625-.372a9.337 9.337 0 00-4.121 2.43m4.29-4.816a9.337 9.337 0 00-4.121-2.43L3.75 4.872m0 0l-2.625-.372a9.337 9.337 0 00-4.121 2.43" /></svg>
+                        <span class="nav-text">All Users</span>
+                    </a>
+                </li>
+            </ul></nav>
+            <div class="sidebar-footer">
+                <button id="sidebarToggle" title="Toggle Sidebar"><span class="label"><</span></button>
+            </div>
+        </aside>
+        <div id="sidebarBackdrop" class="sidebar-backdrop"></div>
+
+        <main class="main-content">
+            <header class="main-header"><button id="mobileMenuBtn" class="mobile-menu-btn" aria-label="Open menu">☰</button><h2 id="pageTitle">System Overview</h2><div id="statusIndicator" style="display: flex; align-items: center; gap: 8px; font-weight: 500; padding: 8px 16px; border-radius: 6px; background-color: var(--bg-dark-2); border: 1px solid var(--border-color);"><span id="statusDot" style="width: 8px; height: 8px; border-radius: 50%; background-color: var(--warning-color); animation: pulse 2s infinite;"></span><span id="statusText">Connecting...</span></div></header>
+        <style>
+            @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        </style>
+            
+            <div id="dashboard" class="tab-content active">
+                <div class="card" id="broadcastStatusCard" style="display: none; margin-bottom: 24px; border: 2px solid var(--primary-color); box-shadow: 0 4px 16px rgba(59, 130, 246, 0.2);">
+                    <div class="card-header" style="border-bottom-color: var(--primary-color);">
+                        <h3>📡 Broadcast Status</h3>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <span id="broadcastStatusBadge" class="count" style="animation: pulse 2s infinite;">🔄 In Progress</span>
+                        </div>
+                    </div>
+                    <div style="padding: 16px; background-color: var(--bg-dark-3); border-radius: 6px; margin-bottom: 12px;">
+                        <div style="font-size: 0.875rem; color: var(--text-secondary); margin-bottom: 4px; font-weight: 500;">MESSAGE PREVIEW</div>
+                        <div id="broadcastMessageText" style="font-style: italic; color: var(--text-primary); line-height: 1.5; max-height: 60px; overflow-y: auto;"></div>
+                    </div>
+                    <div class="progress-bar"><div id="broadcastProgressBar" class="progress-bar-inner" style="width: 0%;"></div></div>
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 12px;">
+                        <div style="text-align: center; padding: 12px; background-color: var(--bg-dark-3); border-radius: 6px;">
+                            <div style="font-size: 1.5rem; font-weight: 700; color: var(--text-primary);"><span id="broadcastProgress">0</span> / <span id="broadcastTotal">0</span></div>
+                            <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 4px; text-transform: uppercase;">Progress</div>
+                        </div>
+                        <div style="text-align: center; padding: 12px; background-color: rgba(16, 185, 129, 0.1); border-radius: 6px; border: 1px solid rgba(16, 185, 129, 0.3);">
+                            <div style="font-size: 1.5rem; font-weight: 700; color: var(--success-color);" id="broadcastSuccess">0</div>
+                            <div style="font-size: 0.75rem; color: var(--success-color); margin-top: 4px; text-transform: uppercase; font-weight: 600;">✓ Success</div>
+                        </div>
+                        <div style="text-align: center; padding: 12px; background-color: rgba(239, 68, 68, 0.1); border-radius: 6px; border: 1px solid rgba(239, 68, 68, 0.3);">
+                            <div style="font-size: 1.5rem; font-weight: 700; color: var(--danger-color);" id="broadcastFailed">0</div>
+                            <div style="font-size: 0.75rem; color: var(--danger-color); margin-top: 4px; text-transform: uppercase; font-weight: 600;">✗ Failed</div>
+                        </div>
+                    </div>
+                    <div id="broadcastErrors" style="margin-top: 12px; padding: 12px; background-color: var(--bg-dark-3); border-radius: 6px; font-size: 0.8em; max-height: 120px; overflow-y: auto; display: none;"></div>
+                </div>
+                <div class="grid command-center-grid">
+                    <div class="column left-column">
+                        <div class="card">
+                            <div class="card-header"><h3>📊 Key Statistics</h3></div>
+                            <div class="grid stats-grid">
+                                <div class="stat-card"><div id="totalFonts" class="value">0</div><div class="label">Fonts</div></div>
+                                <div class="stat-card"><div id="totalUsers" class="value">0</div><div class="label">Users</div></div>
+                                <div class="stat-card"><div id="pendingFontsStat" class="value">0</div><div class="label">Pending</div></div>
+                                <div class="stat-card"><div id="bannedUsersStat" class="value">0</div><div class="label">Banned</div></div>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <div class="card-header">
+                                <h3><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" /></svg>User Management</h3>
+                            </div>
+                            <div class="controls" style="margin-top: 0;">
+                                <input type="text" id="userSearchInput" placeholder="Enter User ID...">
+                                <button id="userSearchBtn" style="min-width: 80px;">🔍 Find</button>
+                            </div>
+                            <div id="userInfo" style="display: none;"></div>
+                            <div id="userActions" style="display: none; margin-top: 12px; display: flex; gap: 8px; flex-wrap: wrap;"></div>
+                            <div id="messageControls" style="display: none; margin-top: 16px;">
+                                <label style="display: block; margin-bottom: 8px; font-weight: 500; color: var(--text-secondary); font-size: 0.875rem;">💬 Send Direct Message</label>
+                                <div class="formatting-toolbar" id="singleToolbar" style="display: flex; gap: 4px; margin-bottom: 8px; padding: 8px; background-color: var(--bg-dark-3); border-radius: 6px; flex-wrap: wrap;">
+                                    <button class="format-btn" data-format="bold" data-target="singleMessage" title="Bold" style="padding: 6px 10px; background-color: var(--bg-dark-2); border: 1px solid var(--border-color); border-radius: 4px; color: var(--text-primary); cursor: pointer; font-weight: 600; transition: all 0.2s;"><strong>B</strong></button>
+                                    <button class="format-btn" data-format="italic" data-target="singleMessage" title="Italic" style="padding: 6px 10px; background-color: var(--bg-dark-2); border: 1px solid var(--border-color); border-radius: 4px; color: var(--text-primary); cursor: pointer; font-style: italic; transition: all 0.2s;">I</button>
+                                    <button class="format-btn" data-format="code" data-target="singleMessage" title="Code" style="padding: 6px 10px; background-color: var(--bg-dark-2); border: 1px solid var(--border-color); border-radius: 4px; color: var(--text-primary); cursor: pointer; font-family: 'Fira Code', monospace; transition: all 0.2s;">&lt;/&gt;</button>
+                                    <button class="format-btn" data-format="link" data-target="singleMessage" title="Link" style="padding: 6px 10px; background-color: var(--bg-dark-2); border: 1px solid var(--border-color); border-radius: 4px; color: var(--text-primary); cursor: pointer; transition: all 0.2s;">🔗</button>
+                                </div>
+                                <textarea id="singleMessage" class="editor-textarea" rows="3" placeholder="Type your message here..."></textarea>
+                                <div class="controls" style="justify-content: flex-end; margin-top: 8px;">
+                                    <button id="sendMessageBtn" style="background: linear-gradient(135deg, var(--primary-color), #60a5fa);">📤 Send Message</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card">
+                             <div class="card-header">
+                                <h3><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M10.34 15.84c-.688 0-1.25-.562-1.25-1.25s.562-1.25 1.25-1.25h3.32c.688 0 1.25.562 1.25 1.25s-.562 1.25-1.25 1.25h-3.32z" /><path stroke-linecap="round" stroke-linejoin="round" d="M9.09 15.84A5.25 5.25 0 0013.59 5.85m-4.5 9.99a5.25 5.25 0 01-4.5-9.99m4.5 9.99V18a2.25 2.25 0 002.25 2.25h1.5a2.25 2.25 0 002.25-2.25v-2.16m-4.5 0a5.25 5.25 0 004.5 0" /></svg>Broadcast Message</h3>
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <span id="charCount" style="font-size: 0.875rem; color: var(--text-secondary); font-weight: 500;">0 / 4096</span>
+                                </div>
+                            </div>
+                            <div style="margin-bottom: 12px;">
+                                <label style="display: block; margin-bottom: 8px; font-weight: 500; color: var(--text-secondary); font-size: 0.875rem;">📢 Compose your broadcast message</label>
+                                <div class="formatting-toolbar" id="broadcastToolbar" style="display: flex; gap: 4px; margin-bottom: 8px; padding: 8px; background-color: var(--bg-dark-3); border-radius: 6px; flex-wrap: wrap;">
+                                    <button class="format-btn" data-format="bold" data-target="broadcastMessage" title="Bold (Ctrl+B)" style="padding: 6px 10px; background-color: var(--bg-dark-2); border: 1px solid var(--border-color); border-radius: 4px; color: var(--text-primary); cursor: pointer; font-weight: 600; transition: all 0.2s;"><strong>B</strong></button>
+                                    <button class="format-btn" data-format="italic" data-target="broadcastMessage" title="Italic (Ctrl+I)" style="padding: 6px 10px; background-color: var(--bg-dark-2); border: 1px solid var(--border-color); border-radius: 4px; color: var(--text-primary); cursor: pointer; font-style: italic; transition: all 0.2s;">I</button>
+                                    <button class="format-btn" data-format="code" data-target="broadcastMessage" title="Code" style="padding: 6px 10px; background-color: var(--bg-dark-2); border: 1px solid var(--border-color); border-radius: 4px; color: var(--text-primary); cursor: pointer; font-family: 'Fira Code', monospace; transition: all 0.2s;">&lt;/&gt;</button>
+                                    <button class="format-btn" data-format="link" data-target="broadcastMessage" title="Link" style="padding: 6px 10px; background-color: var(--bg-dark-2); border: 1px solid var(--border-color); border-radius: 4px; color: var(--text-primary); cursor: pointer; transition: all 0.2s;">🔗</button>
+                                    <button class="format-btn" data-format="strikethrough" data-target="broadcastMessage" title="Strikethrough" style="padding: 6px 10px; background-color: var(--bg-dark-2); border: 1px solid var(--border-color); border-radius: 4px; color: var(--text-primary); cursor: pointer; text-decoration: line-through; transition: all 0.2s;">S</button>
+                                    <button class="format-btn" data-format="underline" data-target="broadcastMessage" title="Underline" style="padding: 6px 10px; background-color: var(--bg-dark-2); border: 1px solid var(--border-color); border-radius: 4px; color: var(--text-primary); cursor: pointer; text-decoration: underline; transition: all 0.2s;">U</button>
+                                    <div style="width: 1px; background-color: var(--border-color); margin: 0 4px;"></div>
+                                    <button class="format-btn" data-format="emoji" data-target="broadcastMessage" title="Insert Emoji" style="padding: 6px 10px; background-color: var(--bg-dark-2); border: 1px solid var(--border-color); border-radius: 4px; color: var(--text-primary); cursor: pointer; transition: all 0.2s;">😊</button>
+                                </div>
+                                <textarea id="broadcastMessage" class="editor-textarea" rows="5" placeholder="Type your message here... (supports Telegram markdown)"></textarea>
+                                <div class="markdown-help" style="margin-top: 6px; padding: 8px; background-color: var(--bg-dark-3); border-radius: 4px; font-size: 0.75rem;">
+                                    💡 <strong>Quick Keys:</strong> Ctrl+B (Bold), Ctrl+I (Italic) | <strong>Format:</strong> *bold* _italic_ `code` ~strike~ __underline__
+                                </div>
+                            </div>
+                            <div style="padding: 12px; background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(245, 158, 11, 0.1)); border-left: 3px solid var(--warning-color); border-radius: 6px; margin-bottom: 12px;">
+                                <div style="display: flex; align-items: start; gap: 8px;">
+                                    <span style="font-size: 1.2rem;">⚠️</span>
+                                    <div style="flex: 1;">
+                                        <div style="font-weight: 600; margin-bottom: 4px; font-size: 0.875rem;">Warning: Mass Broadcast</div>
+                                        <div style="font-size: 0.8rem; color: var(--text-secondary); line-height: 1.4;">This will send your message to <strong id="totalUsersBroadcast">all users</strong>. This action cannot be undone. Please review your message carefully.</div>
+                                    </div>
+                                </div>
+                            </div>
+                             <div class="controls" style="justify-content: space-between;">
+                                <button id="previewBroadcastBtn" style="background-color: var(--bg-dark-3); color: var(--text-primary); border: 1px solid var(--border-color);">👁️ Preview</button>
+                                <button id="sendBroadcastBtn" style="background: linear-gradient(135deg, var(--danger-color), #f97316); min-width: 140px;">📡 Broadcast Now</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="column middle-column">
+                        <div class="card">
+                            <div class="card-header"><h3>🕒 Pending Fonts</h3><span id="pendingCount" class="count">0</span></div>
+                            <ul class="item-list" id="pendingList"></ul>
+                        </div>
+                         <div class="card">
+                            <div class="card-header"><h3>🚫 Banned Users</h3><span id="bannedCount" class="count">0</span></div>
+                            <ul class="item-list" id="bannedList"></ul>
+                        </div>
+                    </div>
+
+                    <div class="column right-column">
+                         <div class="card">
+                            <div class="card-header">
+                                <h3>📜 Live Activity Log</h3>
+                                <div style="display: flex; gap: 8px; align-items: center;">
+                                    <span id="logCount" style="font-size: 0.875rem; color: var(--text-secondary); font-weight: 500;">0 logs</span>
+                                    <button id="autoScrollBtn" class="auto-scroll-btn" title="Toggle auto-scroll">🔒 Auto</button>
+                                    <button id="clearLogBtn" class="clear-log-btn" title="Clear all logs">🗑️ Clear</button>
+                                </div>
+                            </div>
+                            <div class="controls" style="margin-top: 0; margin-bottom: 12px; gap: 8px;">
+                                <input type="text" id="logSearchInput" placeholder="Filter logs..." style="flex: 1;">
+                                <select id="logLevelFilter" style="padding: 10px 12px; border: 1px solid var(--border-color); border-radius: 6px; background-color: var(--bg-dark-1); color: var(--text-primary); cursor: pointer; font-size: 0.875rem;">
+                                    <option value="all">All Levels</option>
+                                    <option value="info">Info</option>
+                                    <option value="warn">Warning</option>
+                                    <option value="error">Error</option>
+                                </select>
+                            </div>
+                            <div id="logContainer" class="log-container"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="users" class="tab-content">
+                 <div class="card">
+                    <div class="card-header"><h3>👥 All Users</h3><span id="allUserCount" class="count">0</span></div>
+                    <div class="controls" style="margin-top: 0; margin-bottom: 16px;"><input type="text" id="allUserSearchInput" placeholder="Search users by ID, name, or username..."></div>
+                    <div style="overflow-x: auto;"><table class="user-list-table"><thead><tr><th>ID</th><th>Name</th><th>Username</th><th>Last Seen</th><th>Status</th><th>Actions</th></tr></thead><tbody id="allUserList"></tbody></table></div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const elements = {
+            status: document.getElementById('statusIndicator'), navMenu: document.getElementById('navMenu'),
+            tabContents: document.querySelectorAll('.tab-content'), pageTitle: document.getElementById('pageTitle'),
+            sidebar: document.getElementById('sidebar'), sidebarToggle: document.getElementById('sidebarToggle'), mobileMenuBtn: document.getElementById('mobileMenuBtn'), sidebarBackdrop: document.getElementById('sidebarBackdrop'),
+            totalFonts: document.getElementById('totalFonts'), pendingFontsStat: document.getElementById('pendingFontsStat'),
+            bannedUsersStat: document.getElementById('bannedUsersStat'), totalUsers: document.getElementById('totalUsers'),
+            pendingList: document.getElementById('pendingList'), pendingCount: document.getElementById('pendingCount'),
+            bannedList: document.getElementById('bannedList'), bannedCount: document.getElementById('bannedCount'),
+            logContainer: document.getElementById('logContainer'), logSearchInput: document.getElementById('logSearchInput'),
+            clearLogBtn: document.getElementById('clearLogBtn'), logLevelFilter: document.getElementById('logLevelFilter'),
+            autoScrollBtn: document.getElementById('autoScrollBtn'), logCount: document.getElementById('logCount'),
+            userSearchInput: document.getElementById('userSearchInput'), userSearchBtn: document.getElementById('userSearchBtn'),
+            banBtn: document.getElementById('banBtn'), userInfo: document.getElementById('userInfo'),
+            messageControls: document.getElementById('messageControls'), singleMessage: document.getElementById('singleMessage'),
+            sendMessageBtn: document.getElementById('sendMessageBtn'),
+            broadcastMessage: document.getElementById('broadcastMessage'), sendBroadcastBtn: document.getElementById('sendBroadcastBtn'),
+            previewBroadcastBtn: document.getElementById('previewBroadcastBtn'), charCount: document.getElementById('charCount'),
+            totalUsersBroadcast: document.getElementById('totalUsersBroadcast'),
+            allUserCount: document.getElementById('allUserCount'), allUserSearchInput: document.getElementById('allUserSearchInput'),
+            allUserList: document.getElementById('allUserList'),
+            toastContainer: document.getElementById('toast-container'),
+            broadcastStatusCard: document.getElementById('broadcastStatusCard'), broadcastMessageText: document.getElementById('broadcastMessageText'), broadcastProgressBar: document.getElementById('broadcastProgressBar'), broadcastProgress: document.getElementById('broadcastProgress'), broadcastTotal: document.getElementById('broadcastTotal'), broadcastSuccess: document.getElementById('broadcastSuccess'), broadcastFailed: document.getElementById('broadcastFailed'), broadcastErrors: document.getElementById('broadcastErrors'),
+        };
+        const apiCall = async (endpoint, method = 'GET', body = null, signal = null) => { try { const options = { method, headers: { 'Content-Type': 'application/json' }, signal }; if (body) options.body = JSON.stringify(body); const response = await fetch(endpoint, options); const responseData = await response.json(); if (!response.ok) throw new Error(responseData.error || `API call failed: ${response.statusText}`); return responseData; } catch (error) { if (error.name !== 'AbortError') { console.error(`API Error on ${endpoint}:`, error); showToast(`Action failed: ${error.message}`, 'error'); } return null; } };
+        const showToast = (message, type = 'success') => { if (!message) return; const toast = document.createElement('div'); toast.className = `toast toast-${type}`; toast.textContent = message; elements.toastContainer.appendChild(toast); setTimeout(() => toast.classList.add('show'), 10); setTimeout(() => { toast.classList.add('hide'); toast.addEventListener('animationend', () => toast.remove()); }, 4000); };
+        const createEmptyListItem = (message) => `<li style="justify-content:center; padding: 20px; color: var(--text-secondary);">${message}</li>`;
+        const createEmptyTableRow = (message, colspan) => `<tr class="empty-state"><td colspan="${colspan}" style="text-align:center; padding: 20px;">${message}</td></tr>`;
+        
+        const escapeHTML = (str) => String(str).replace(/[&<>\"']/g, (ch) => ({
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#39;'
+        }[ch] || ch));
+
+        const renderStats = (stats = {}) => {
+            elements.totalFonts.textContent = stats.totalFonts ?? 0;
+            elements.pendingFontsStat.textContent = stats.pendingCount ?? 0;
+            elements.bannedUsersStat.textContent = stats.bannedCount ?? 0;
+            elements.totalUsers.textContent = stats.totalUsers ?? 0;
+            if (elements.totalUsersBroadcast) {
+                elements.totalUsersBroadcast.textContent = `${stats.totalUsers ?? 0} users`;
+            }
+        };
+        const renderPending = (fonts = []) => { elements.pendingCount.textContent = fonts.length; if (fonts.length === 0) return elements.pendingList.innerHTML = createEmptyListItem('No pending fonts.'); elements.pendingList.innerHTML = fonts.map(fileName => { const originalName = fileName.split('_').slice(2).join('_') || fileName; const uploaderId = fileName.split('_')[1]; return `<li><div class=\"item-info\"><strong>${originalName}</strong><span class=\"meta\" style=\"display:block;\">from: <code>${uploaderId}</code></span></div><div><button class=\"action-btn approve-btn\" data-filename=\"${fileName}\">✔</button><button class=\"action-btn reject-btn\" data-filename=\"${fileName}\">✖</button></div></li>`; }).join(''); };
+        const renderBanned = (users = []) => { elements.bannedCount.textContent = users.length; if (users.length === 0) return elements.bannedList.innerHTML = createEmptyListItem('No banned users.'); elements.bannedList.innerHTML = users.map(user => `<li><div class="item-info"><code>${user.id}</code><span class="meta" style="display:block;">${user.reason || 'N/A'}</span></div><button class="action-btn unban-btn" data-userid="${user.id}">Unban</button></li>`).join(''); };
+        let autoScrollEnabled = true;
+        const parseLogEntry = (log) => {
+            const timestamp = new Date().toLocaleTimeString();
+            let level = 'INFO';
+            let logClass = 'log-info';
+            let message = log;
+            
+            if (log.includes('[ERROR]') || log.includes('error') || log.includes('Error') || log.includes('failed')) {
+                level = 'ERROR';
+                logClass = 'log-error';
+            } else if (log.includes('[WARN]') || log.includes('warn') || log.includes('Warning')) {
+                level = 'WARN';
+                logClass = 'log-warn';
+            } else if (log.includes('success') || log.includes('Success') || log.includes('✓') || log.includes('approved')) {
+                level = 'SUCCESS';
+                logClass = 'log-success';
+            }
+            
+            // Extract timestamp if present in log
+            const timeMatch = log.match(/\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2}/);
+            const extractedTime = timeMatch ? timeMatch[0].split(' ')[1] : timestamp;
+            
+            return { time: extractedTime, level, message: log, class: logClass };
+        };
+        
+        const renderLogs = (logs = []) => { 
+            if (logs.length === 0) {
+                elements.logContainer.innerHTML = '<div class="log-empty">📭 No logs to display. Activity will appear here.</div>'; 
+                if (elements.logCount) elements.logCount.textContent = '0 logs';
+                return;
+            }
+            
+            const levelFilter = elements.logLevelFilter?.value || 'all';
+            const searchTerm = elements.logSearchInput?.value.toLowerCase() || '';
+            
+            let filteredLogs = logs;
+            if (levelFilter !== 'all') {
+                filteredLogs = logs.filter(log => {
+                    const parsed = parseLogEntry(log);
+                    return parsed.level.toLowerCase() === levelFilter;
+                });
+            }
+            
+            if (searchTerm) {
+                filteredLogs = filteredLogs.filter(log => log.toLowerCase().includes(searchTerm));
+            }
+            
+            if (filteredLogs.length === 0) {
+                elements.logContainer.innerHTML = '<div class="log-empty">🔍 No logs match your filter criteria.</div>';
+                if (elements.logCount) elements.logCount.textContent = '0 logs';
+                return;
+            }
+            
+            const shouldScroll = autoScrollEnabled && elements.logContainer.scrollTop + elements.logContainer.clientHeight >= elements.logContainer.scrollHeight - 50;
+            
+            elements.logContainer.innerHTML = filteredLogs.map(log => {
+                const parsed = parseLogEntry(log);
+                const safeMsg = escapeHTML(parsed.message);
+                return `<div class="log-entry ${parsed.class}">
+                    <span class="log-time">${parsed.time}</span>
+                    <span class="log-level">${parsed.level}</span>
+                    <span class="log-message">${safeMsg}</span>
+                </div>`;
+            }).join('');
+            
+            if (elements.logCount) elements.logCount.textContent = `${filteredLogs.length} log${filteredLogs.length !== 1 ? 's' : ''}`;
+            
+            if (shouldScroll) {
+                elements.logContainer.scrollTop = elements.logContainer.scrollHeight;
+            }
+        };
+        const renderUserInfo = (user) => { 
+            const userActionsEl = document.getElementById('userActions');
+            if (!user) { 
+                elements.userInfo.innerHTML = `<div style="padding:16px; background-color: var(--bg-dark-3); border-left: 4px solid var(--danger-color); color: var(--text-primary); border-radius:8px; margin-top: 12px;">⚠️ User not found. Please check the User ID and try again.</div>`; 
+                elements.userInfo.style.display = 'block'; 
+                elements.messageControls.style.display = 'none'; 
+                if (userActionsEl) userActionsEl.style.display = 'none';
+                return; 
+            } 
+            const banStatus = user.isBanned ? '<span class="user-status-banned" style="padding: 4px 10px; background-color: rgba(239, 68, 68, 0.2); border-radius: 12px; font-size: 0.75rem; font-weight: 600;">🚫 BANNED</span>' : '<span class="user-status-active" style="padding: 4px 10px; background-color: rgba(16, 185, 129, 0.2); border-radius: 12px; font-size: 0.75rem; font-weight: 600;">✓ ACTIVE</span>'; 
+            elements.userInfo.innerHTML = `<div id="user-info-details" style="margin-top:12px; padding:18px; background: linear-gradient(135deg, var(--bg-dark-3) 0%, var(--bg-dark-2) 100%); border-radius:10px; border: 1px solid var(--border-color);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <div style="width: 48px; height: 48px; border-radius: 50%; background: linear-gradient(135deg, var(--primary-color), #60a5fa); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: bold;">${(user.first_name?.[0] || user.username?.[0] || 'U').toUpperCase()}</div>
+                        <div>
+                            <div style="font-size: 1.1rem; font-weight: 600; margin-bottom: 4px;">${user.first_name || ''} ${user.last_name || ''}</div>
+                            <div style="font-size: 0.875rem; color: var(--text-secondary);">${user.username ? `@${user.username}` : 'No username'}</div>
+                        </div>
+                    </div>
+                    ${banStatus}
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding-top: 12px; border-top: 1px solid var(--border-color);">
+                    <div>
+                        <div style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">User ID</div>
+                        <div style="font-family: 'Fira Code', monospace; font-size: 0.9rem; color: var(--primary-color); font-weight: 500;"><code style="background: var(--bg-dark-1); padding: 4px 8px; border-radius: 4px;">${user.id}</code></div>
+                    </div>
+                    <div>
+                        <div style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Last Seen</div>
+                        <div style="font-size: 0.875rem;">${new Date(user.lastSeen).toLocaleString()}</div>
+                    </div>
+                </div>
+            </div>`; 
+            elements.userInfo.style.display = 'block'; 
+            elements.messageControls.style.display = 'block'; 
+            if (userActionsEl) {
+                userActionsEl.style.display = 'flex';
+                const banBtn = user.isBanned 
+                    ? `<button class="action-btn unban-btn" data-userid="${user.id}" style="flex: 1;">🔓 Unban User</button>` 
+                    : `<button class="action-btn ban-btn" data-userid="${user.id}" style="flex: 1;">🚫 Ban User</button>`;
+                userActionsEl.innerHTML = banBtn;
+            }
+        };
+        const renderAllUsers = (users = []) => { elements.allUserCount.textContent = users.length; if (users.length === 0) { elements.allUserList.innerHTML = createEmptyTableRow('No users found for this query.', 6); return; } elements.allUserList.innerHTML = users.map(user => { const statusClass = user.isBanned ? 'user-status-banned' : 'user-status-active'; const statusText = user.isBanned ? 'Banned' : 'Active'; const banButton = user.isBanned ? `<button class="action-btn unban-btn" data-userid="${user.id}">Unban</button>` : `<button class="action-btn ban-btn" data-userid="${user.id}">Ban</button>`; return `<tr><td><code>${user.id}</code></td><td>${(user.first_name || '')} ${user.last_name || ''}</td><td>${user.username ? `@${user.username}` : 'N/A'}</td><td>${new Date(user.lastSeen).toLocaleString()}</td><td><span style="font-weight:bold;" class="${statusClass}">${statusText}</span></td><td>${banButton}</td></tr>`; }).join(''); };
+        const renderBroadcastStatus = (status) => { 
+            const statusBadge = document.getElementById('broadcastStatusBadge');
+            const errorsContainer = elements.broadcastErrors;
+            
+            if (!status) { 
+                elements.broadcastStatusCard.style.display = 'none'; 
+                return; 
+            } 
+            
+            elements.broadcastStatusCard.style.display = 'block'; 
+            elements.broadcastMessageText.textContent = status.message.substring(0, 150) + (status.message.length > 150 ? '...' : ''); 
+            elements.broadcastTotal.textContent = status.total; 
+            
+            const progress = status.total > 0 ? ((status.sent + status.failed) / status.total) * 100 : 0; 
+            elements.broadcastProgressBar.style.width = `${progress}%`; 
+            elements.broadcastProgress.textContent = status.sent + status.failed; 
+            elements.broadcastSuccess.textContent = status.sent; 
+            elements.broadcastFailed.textContent = status.failed; 
+            
+            if(status.completedAt) { 
+                const successRate = status.total > 0 ? ((status.sent / status.total) * 100).toFixed(1) : 0;
+                if (status.failed > 0) {
+                    elements.broadcastProgressBar.style.background = 'linear-gradient(90deg, var(--warning-color), #f97316)';
+                    if (statusBadge) {
+                        statusBadge.innerHTML = '⚠️ Completed with Errors';
+                        statusBadge.style.background = 'linear-gradient(135deg, var(--warning-color), #f97316)';
+                    }
+                } else {
+                    elements.broadcastProgressBar.style.background = 'linear-gradient(90deg, var(--success-color), #10b981)';
+                    if (statusBadge) {
+                        statusBadge.innerHTML = '✓ Completed Successfully';
+                        statusBadge.style.background = 'linear-gradient(135deg, var(--success-color), #10b981)';
+                    }
+                }
+                statusBadge.style.animation = 'none';
+            } else { 
+                elements.broadcastProgressBar.style.background = 'linear-gradient(90deg, var(--primary-color), #60a5fa)';
+                if (statusBadge) {
+                    statusBadge.innerHTML = '🔄 In Progress';
+                    statusBadge.style.animation = 'pulse 2s infinite';
+                }
+            }
+            
+            if(status.errors && status.errors.length > 0) { 
+                errorsContainer.style.display = 'block';
+                errorsContainer.innerHTML = '<div style="font-weight: 600; margin-bottom: 8px; color: var(--danger-color);">⚠️ Error Details (' + status.errors.length + '):</div>' + status.errors.map(e => `<div style="padding: 6px 8px; background-color: rgba(239, 68, 68, 0.1); border-left: 2px solid var(--danger-color); margin-bottom: 4px; border-radius: 4px;">User <code style="background: var(--bg-dark-1); padding: 2px 6px; border-radius: 3px;">${e.chatId}</code>: ${e.error}</div>`).join(''); 
+            } else { 
+                errorsContainer.style.display = 'none';
+            } 
+        };
+        
+        let currentTab = 'dashboard';
+        let dataFetchController;
+        const fetchData = async () => {
+            if (dataFetchController) dataFetchController.abort();
+            dataFetchController = new AbortController();
+            const signal = dataFetchController.signal;
+            const statusTextEl = document.getElementById('statusText');
+            const statusDotEl = document.getElementById('statusDot');
+            if (statusTextEl) statusTextEl.textContent = 'Loading...';
+            if (statusDotEl) { statusDotEl.style.backgroundColor = 'var(--warning-color)'; statusDotEl.style.boxShadow = '0 0 8px var(--warning-color)'; }
+            elements.status.style.borderColor = 'var(--warning-color)';
+            try {
+                if (currentTab === 'dashboard') {
+                    const logSearchQuery = elements.logSearchInput.value.trim();
+                    const data = await apiCall(`/api/data?log_search=${encodeURIComponent(logSearchQuery)}`, 'GET', null, signal);
+                    const broadcastStatus = await apiCall('/api/broadcast/status', 'GET', null, signal);
+                    if (data) { renderStats(data.stats); renderPending(data.pendingFonts); renderBanned(data.bannedUsers); renderLogs(data.logs); renderBroadcastStatus(broadcastStatus); }
+                } else if (currentTab === 'users') {
+                    const userSearchQuery = elements.allUserSearchInput.value.trim();
+                    const data = await apiCall(`/api/users?search=${encodeURIComponent(userSearchQuery)}`, 'GET', null, signal);
+                    if (data?.users) renderAllUsers(data.users);
+                }
+                const statusText = document.getElementById('statusText');
+                const statusDot = document.getElementById('statusDot');
+                if (statusText) statusText.textContent = 'Live';
+                if (statusDot) {
+                    statusDot.style.backgroundColor = 'var(--success-color)';
+                    statusDot.style.boxShadow = '0 0 8px var(--success-color)';
+                }
+                elements.status.style.borderColor = 'var(--success-color)';
+            } catch (err) {
+                if (err.name !== 'AbortError') {
+                const statusText = document.getElementById('statusText');
+                const statusDot = document.getElementById('statusDot');
+                if (statusText) statusText.textContent = 'Error';
+                if (statusDot) {
+                    statusDot.style.backgroundColor = 'var(--danger-color)';
+                    statusDot.style.boxShadow = '0 0 8px var(--danger-color)';
+                }
+                elements.status.style.borderColor = 'var(--danger-color)';
+                }
+            }
+        };
+        
+        // Formatting toolbar functionality
+        const applyFormatting = (format, targetId) => {
+            const textarea = document.getElementById(targetId);
+            if (!textarea) return;
+            
+            const start = textarea.selectionStart;
+            const end = textarea.selectionEnd;
+            const selectedText = textarea.value.substring(start, end);
+            const beforeText = textarea.value.substring(0, start);
+            const afterText = textarea.value.substring(end);
+            
+            let formattedText = '';
+            let cursorOffset = 0;
+            
+            switch(format) {
+                case 'bold':
+                    formattedText = `*${selectedText || 'bold text'}*`;
+                    cursorOffset = selectedText ? formattedText.length : 1;
+                    break;
+                case 'italic':
+                    formattedText = `_${selectedText || 'italic text'}_`;
+                    cursorOffset = selectedText ? formattedText.length : 1;
+                    break;
+                case 'code':
+                    formattedText = `\`${selectedText || 'code'}\``;
+                    cursorOffset = selectedText ? formattedText.length : 1;
+                    break;
+                case 'link':
+                    const url = prompt('Enter URL:', 'https://');
+                    if (url) {
+                        formattedText = `[${selectedText || 'link text'}](${url})`;
+                        cursorOffset = selectedText ? formattedText.length : 1;
+                    } else {
+                        return;
+                    }
+                    break;
+                case 'strikethrough':
+                    formattedText = `~${selectedText || 'strikethrough'}~`;
+                    cursorOffset = selectedText ? formattedText.length : 1;
+                    break;
+                case 'underline':
+                    formattedText = `__${selectedText || 'underline'}__`;
+                    cursorOffset = selectedText ? formattedText.length : 2;
+                    break;
+                case 'emoji':
+                    const emojis = ['😊', '👍', '❤️', '🎉', '🔥', '✨', '💡', '📢', '⚠️', '✅', '❌', '🚀', '💬', '📝', '🎯'];
+                    const emojiPicker = emojis.join(' ');
+                    const selectedEmoji = prompt(`Select emoji (copy and paste):\n\n${emojiPicker}`, '😊');
+                    if (selectedEmoji) {
+                        formattedText = selectedEmoji;
+                        cursorOffset = formattedText.length;
+                    } else {
+                        return;
+                    }
+                    break;
+            }
+            
+            textarea.value = beforeText + formattedText + afterText;
+            textarea.focus();
+            
+            if (selectedText) {
+                textarea.selectionStart = start;
+                textarea.selectionEnd = start + formattedText.length;
+            } else {
+                textarea.selectionStart = textarea.selectionEnd = start + cursorOffset;
+            }
+            
+            // Trigger input event for character counter
+            textarea.dispatchEvent(new Event('input'));
+        };
+        
+        // Add keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if ((e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey) {
+                const activeElement = document.activeElement;
+                if (activeElement.tagName === 'TEXTAREA') {
+                    if (e.key === 'b') {
+                        e.preventDefault();
+                        applyFormatting('bold', activeElement.id);
+                    } else if (e.key === 'i') {
+                        e.preventDefault();
+                        applyFormatting('italic', activeElement.id);
+                    }
+                }
+            }
+        });
+        
+        const setupEventListeners = () => {
+            // Format button click handlers
+            document.querySelectorAll('.format-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const format = btn.dataset.format;
+                    const target = btn.dataset.target;
+                    applyFormatting(format, target);
+                });
+            });
+            
+            elements.navMenu.addEventListener('click', (e) => { e.preventDefault(); const link = e.target.closest('.nav-link'); if (!link) return; const tabId = link.dataset.tab; if (currentTab === tabId) return; currentTab = tabId; const currentActive = elements.navMenu.querySelector('.active'); if (currentActive) currentActive.classList.remove('active'); link.classList.add('active'); elements.tabContents.forEach(c => c.classList.toggle('active', c.id === tabId)); elements.pageTitle.textContent = link.querySelector('.nav-text').textContent.trim(); fetchData(); if (elements.sidebar.classList.contains('open')) { elements.sidebar.classList.remove('open'); elements.sidebarBackdrop.classList.remove('visible'); document.body.style.overflow=''; elements.mobileMenuBtn?.setAttribute('aria-expanded','false'); } });
+            const handleListAction = async (e) => { 
+                const button = e.target.closest('.action-btn'); 
+                if (!button) return; 
+                const { dataset } = button; 
+                let actionTaken = false; 
+                if (dataset.filename) { 
+                    if (button.classList.contains('approve-btn')) await apiCall('/api/approve', 'POST', { fileName: dataset.filename }); 
+                    else if (button.classList.contains('reject-btn')) await apiCall('/api/reject', 'POST', { fileName: dataset.filename }); 
+                    actionTaken = true; 
+                } else if (dataset.userid) { 
+                    if (button.classList.contains('unban-btn')) await apiCall('/api/unban', 'POST', { userId: dataset.userid }); 
+                    else if (button.classList.contains('ban-btn')) { 
+                        if (confirm(`Ban user ${dataset.userid}?`)) await apiCall('/api/ban', 'POST', { userId: dataset.userid, reason: 'Banned from admin panel' }); 
+                    } 
+                    actionTaken = true; 
+                } 
+                if (actionTaken) { 
+                    const userId = elements.userSearchInput.value.trim();
+                    if (userId && dataset.userid === userId) {
+                        const user = await apiCall(`/api/user/${userId}`);
+                        renderUserInfo(user);
+                    }
+                    fetchData(); 
+                } 
+            };
+            elements.pendingList.addEventListener('click', handleListAction);
+            elements.bannedList.addEventListener('click', handleListAction);
+            elements.allUserList.addEventListener('click', handleListAction);
+            document.getElementById('userActions')?.addEventListener('click', handleListAction);
+            const handleUserSearch = async () => { 
+                const userId = elements.userSearchInput.value.trim(); 
+                if (!userId) { 
+                    showToast('Please enter a User ID', 'error'); 
+                    return; 
+                } 
+                if (isNaN(userId)) { 
+                    showToast('User ID must be a number', 'error'); 
+                    return; 
+                } 
+                elements.userSearchBtn.disabled = true;
+                elements.userSearchBtn.textContent = '⏳ Searching...';
+                const user = await apiCall(`/api/user/${userId}`); 
+                elements.userSearchBtn.disabled = false;
+                elements.userSearchBtn.textContent = '🔍 Find';
+                renderUserInfo(user); 
+            };
+            elements.userSearchBtn.addEventListener('click', handleUserSearch);
+            elements.userSearchInput.addEventListener('keyup', e => { if (e.key === 'Enter') handleUserSearch(); });
+            elements.sendMessageBtn.addEventListener('click', async () => { const userId = elements.userSearchInput.value.trim(); const message = elements.singleMessage.value.trim(); if (userId && message) { const result = await apiCall('/api/message', 'POST', { userId, message }); if (result) { showToast(`Message queued for user ${userId}!`, 'success'); elements.singleMessage.value = ''; } } });
+            // Character counter for broadcast message
+            elements.broadcastMessage?.addEventListener('input', () => {
+                const length = elements.broadcastMessage.value.length;
+                const maxLength = 4096;
+                if (elements.charCount) {
+                    elements.charCount.textContent = `${length} / ${maxLength}`;
+                    if (length > maxLength) {
+                        elements.charCount.style.color = 'var(--danger-color)';
+                    } else if (length > maxLength * 0.9) {
+                        elements.charCount.style.color = 'var(--warning-color)';
+                    } else {
+                        elements.charCount.style.color = 'var(--text-secondary)';
+                    }
+                }
+            });
+            
+            elements.previewBroadcastBtn?.addEventListener('click', () => {
+                const message = elements.broadcastMessage.value.trim();
+                if (!message) {
+                    showToast('Please enter a message to preview', 'error');
+                    return;
+                }
+                const previewHtml = `
+                    <div style="padding: 20px; background: linear-gradient(135deg, var(--bg-dark-3), var(--bg-dark-2)); border-radius: 10px; border: 1px solid var(--border-color); max-width: 500px; margin: 20px auto;">
+                        <div style="font-weight: 600; margin-bottom: 12px; color: var(--primary-color); display: flex; align-items: center; gap: 8px;">
+                            <span style="font-size: 1.2rem;">👁️</span> Message Preview
+                        </div>
+                        <div style="background-color: var(--bg-dark-1); padding: 16px; border-radius: 8px; border-left: 3px solid var(--primary-color); white-space: pre-wrap; word-wrap: break-word; line-height: 1.6;">${message.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div>
+                        <div style="margin-top: 12px; font-size: 0.875rem; color: var(--text-secondary);">
+                            <strong>Length:</strong> ${message.length} characters | <strong>Will send to:</strong> ${elements.totalUsers.textContent} users
+                        </div>
+                    </div>
+                `;
+                showToast('Preview generated', 'info');
+                // Create a modal-like preview
+                const existingPreview = document.getElementById('broadcastPreview');
+                if (existingPreview) existingPreview.remove();
+                
+                const preview = document.createElement('div');
+                preview.id = 'broadcastPreview';
+                preview.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); z-index: 10000; display: flex; align-items: center; justify-content: center; animation: fadeIn 0.3s;';
+                preview.innerHTML = previewHtml + '<button onclick="this.parentElement.remove()" style="position: absolute; top: 20px; right: 20px; background: var(--danger-color); color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: 600;">✕ Close</button>';
+                preview.addEventListener('click', (e) => { if (e.target === preview) preview.remove(); });
+                document.body.appendChild(preview);
+            });
+            
+            elements.sendBroadcastBtn?.addEventListener('click', async (e) => { 
+                const button = e.target; 
+                const message = elements.broadcastMessage.value.trim(); 
+                
+                if (!message) {
+                    showToast('Please enter a message to broadcast', 'error');
+                    return;
+                }
+                
+                if (message.length > 4096) {
+                    showToast('Message exceeds maximum length of 4096 characters', 'error');
+                    return;
+                }
+                
+                const userCount = elements.totalUsers.textContent || '0';
+                if (!confirm(`⚠️ Are you absolutely sure you want to broadcast this message to ${userCount} users?\n\nThis action cannot be undone!`)) {
+                    return;
+                }
+                
+                button.disabled = true; 
+                button.innerHTML = '⏳ Sending...';
+                button.style.background = 'linear-gradient(135deg, #6b7280, #9ca3af)';
+                
+                const result = await apiCall('/api/broadcast', 'POST', { message }); 
+                
+                if (result) { 
+                    showToast(result.message || 'Broadcast started successfully!', 'success'); 
+                    elements.broadcastMessage.value = ''; 
+                    if (elements.charCount) elements.charCount.textContent = '0 / 4096';
+                    fetchData(); // Refresh to show broadcast status
+                } 
+                
+                button.disabled = false; 
+                button.innerHTML = '📡 Broadcast Now';
+                button.style.background = 'linear-gradient(135deg, var(--danger-color), #f97316)';
+            });
+            elements.logSearchInput.addEventListener('keyup', () => { clearTimeout(window.searchTimeout); window.searchTimeout = setTimeout(fetchData, 300); });
+            elements.logLevelFilter?.addEventListener('change', () => { fetchData(); });
+            elements.clearLogBtn.addEventListener('click', () => { 
+                if (confirm('Are you sure you want to clear all logs?')) { 
+                    elements.logContainer.innerHTML = '<div class="log-empty">📭 Logs cleared. New activity will appear here.</div>'; 
+                    if (elements.logCount) elements.logCount.textContent = '0 logs';
+                    showToast('Logs cleared successfully', 'success'); 
+                } 
+            });
+            elements.autoScrollBtn?.addEventListener('click', () => {
+                autoScrollEnabled = !autoScrollEnabled;
+                if (autoScrollEnabled) {
+                    elements.autoScrollBtn.classList.remove('disabled');
+                    elements.autoScrollBtn.innerHTML = '🔓 Auto';
+                    elements.logContainer.scrollTop = elements.logContainer.scrollHeight;
+                } else {
+                    elements.autoScrollBtn.classList.add('disabled');
+                    elements.autoScrollBtn.innerHTML = '🔒 Manual';
+                }
+                showToast(`Auto-scroll ${autoScrollEnabled ? 'enabled' : 'disabled'}`, 'info');
+            });
+            elements.allUserSearchInput.addEventListener('keyup', () => { clearTimeout(window.userSearchTimeout); window.userSearchTimeout = setTimeout(fetchData, 300); });
+            elements.sidebarToggle.addEventListener('click', () => { elements.sidebar.classList.toggle('collapsed'); elements.sidebarToggle.querySelector('.label').textContent = elements.sidebar.classList.contains('collapsed') ? '»' : '«'; });
+            // Mobile sidebar open/close handlers
+            const openMobileSidebar = () => { elements.sidebar.classList.add('open'); elements.sidebarBackdrop.classList.add('visible'); document.body.style.overflow = 'hidden'; elements.mobileMenuBtn?.setAttribute('aria-expanded', 'true'); };
+            const closeMobileSidebar = () => { elements.sidebar.classList.remove('open'); elements.sidebarBackdrop.classList.remove('visible'); document.body.style.overflow = ''; elements.mobileMenuBtn?.setAttribute('aria-expanded', 'false'); };
+            elements.mobileMenuBtn?.addEventListener('click', (e) => { e.preventDefault(); openMobileSidebar(); });
+            elements.sidebarBackdrop?.addEventListener('click', closeMobileSidebar);
+            document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeMobileSidebar(); });
+            window.addEventListener('resize', () => { if (window.innerWidth >= 769) { closeMobileSidebar(); } });
+        };
+        
+        let wsRetryAttempts = 0;
+        let wsFetchDebounce;
+        let logAnimStyleInjected = false;
+        function connectWebSocket() {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const ws = new WebSocket(`${protocol}//${window.location.host}`);
+            ws.onopen = () => { 
+                wsRetryAttempts = 0;
+                showToast('Real-time connection established!', 'success');
+                fetchData();
+            };
+            ws.onmessage = (event) => { 
+                try {
+                    const data = JSON.parse(event.data);
+                    if (data.event === 'dataUpdate') {
+                        // Debounce to avoid rapid repeated fetches
+                        clearTimeout(wsFetchDebounce);
+                        wsFetchDebounce = setTimeout(() => fetchData(), 250);
+                        if (data.type) showToast(`Live update: ${String(data.type || '').replace(/_/g, ' ')}`, 'info');
+                    } else if (data.event === 'newLog' && data.message) {
+                        if (currentTab !== 'dashboard') return;
+                        const nearBottom = elements.logContainer.scrollTop + elements.logContainer.clientHeight >= elements.logContainer.scrollHeight - 40;
+                        const parsed = parseLogEntry(data.message);
+                        const newLog = document.createElement('div');
+                        newLog.className = `log-entry ${parsed.class}`;
+                        const timeSpan = document.createElement('span'); timeSpan.className = 'log-time'; timeSpan.textContent = parsed.time;
+                        const levelSpan = document.createElement('span'); levelSpan.className = 'log-level'; levelSpan.textContent = parsed.level;
+                        const msgSpan = document.createElement('span'); msgSpan.className = 'log-message'; msgSpan.textContent = parsed.message;
+                        newLog.appendChild(timeSpan); newLog.appendChild(levelSpan); newLog.appendChild(msgSpan);
+                        newLog.style.animation = 'slideInRight 0.3s ease-out';
+                        elements.logContainer.appendChild(newLog);
+                        if (autoScrollEnabled && nearBottom) { elements.logContainer.scrollTop = elements.logContainer.scrollHeight; }
+                        const currentCount = elements.logContainer.children.length;
+                        if (elements.logCount) elements.logCount.textContent = `${currentCount} log${currentCount !== 1 ? 's' : ''}`;
+                        while (elements.logContainer.children.length > 200) elements.logContainer.removeChild(elements.logContainer.firstChild);
+                    }
+                } catch (error) {
+                    console.error("Error processing WebSocket message:", error);
+                }
+            };
+            if (!logAnimStyleInjected) {
+                const style = document.createElement('style');
+                style.textContent = '@keyframes slideInRight { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }';
+                document.head.appendChild(style);
+                logAnimStyleInjected = true;
+            }
+            ws.onclose = () => { 
+                const statusText = document.getElementById('statusText');
+                const statusDot = document.getElementById('statusDot');
+                if (statusText) statusText.textContent = 'Disconnected. Retrying...';
+                if (statusDot) { statusDot.style.backgroundColor = 'var(--danger-color)'; statusDot.style.boxShadow = '0 0 8px var(--danger-color)'; }
+                elements.status.style.borderColor = 'var(--danger-color)';
+                wsRetryAttempts = Math.min(wsRetryAttempts + 1, 6);
+                const delay = Math.min(30000, 1000 * Math.pow(2, wsRetryAttempts));
+                setTimeout(connectWebSocket, delay);
+            };
+            ws.onerror = (error) => { console.error('WebSocket error:', error); ws.close(); };
+        }
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            setupEventListeners();
+            connectWebSocket();
+        });
+    </script>
+</body>
+</html>

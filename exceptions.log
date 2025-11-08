@@ -1,0 +1,54 @@
+2025-11-08 13:49:08 [error]: uncaughtException: listen EADDRINUSE: address already in use :::3000
+Error: listen EADDRINUSE: address already in use :::3000
+    at Server.setupListenHandle [as _listen2] (node:net:1939:16)
+    at listenInCluster (node:net:1996:12)
+    at Server.listen (node:net:2101:7)
+    at startAdminPanel (C:\Users\GS Computer\Downloads\Telegram Desktop\botV8\bot\adminPanel.js:221:12)
+    at main (C:\Users\GS Computer\Downloads\Telegram Desktop\botV8\bot\index.js:57:5)
+    at Error: listen EADDRINUSE: address already in use :::3000
+    at Server.setupListenHandle [as _listen2] (node:net:1939:16)
+    at listenInCluster (node:net:1996:12)
+    at Server.listen (node:net:2101:7)
+    at startAdminPanel (C:\Users\GS Computer\Downloads\Telegram Desktop\botV8\bot\adminPanel.js:221:12)
+    at main (C:\Users\GS Computer\Downloads\Telegram Desktop\botV8\bot\index.js:57:5)
+2025-11-08 13:49:11 [error]: uncaughtException: listen EADDRINUSE: address already in use :::3000
+Error: listen EADDRINUSE: address already in use :::3000
+    at Server.setupListenHandle [as _listen2] (node:net:1939:16)
+    at listenInCluster (node:net:1996:12)
+    at Server.listen (node:net:2101:7)
+    at startAdminPanel (C:\Users\GS Computer\Downloads\Telegram Desktop\botV8\bot\adminPanel.js:221:12)
+    at main (C:\Users\GS Computer\Downloads\Telegram Desktop\botV8\bot\index.js:57:5)
+    at Error: listen EADDRINUSE: address already in use :::3000
+    at Server.setupListenHandle [as _listen2] (node:net:1939:16)
+    at listenInCluster (node:net:1996:12)
+    at Server.listen (node:net:2101:7)
+    at startAdminPanel (C:\Users\GS Computer\Downloads\Telegram Desktop\botV8\bot\adminPanel.js:221:12)
+    at main (C:\Users\GS Computer\Downloads\Telegram Desktop\botV8\bot\index.js:57:5)
+2025-11-08 14:44:03 [error]: uncaughtException: listen EADDRINUSE: address already in use :::3000
+Error: listen EADDRINUSE: address already in use :::3000
+    at Server.setupListenHandle [as _listen2] (node:net:1939:16)
+    at listenInCluster (node:net:1996:12)
+    at Server.listen (node:net:2101:7)
+    at startAdminPanel (C:\Users\GS Computer\Downloads\Telegram Desktop\botV8\bot\adminPanel.js:221:12)
+    at main (C:\Users\GS Computer\Downloads\Telegram Desktop\botV8\bot\index.js:57:5)
+    at Error: listen EADDRINUSE: address already in use :::3000
+    at Server.setupListenHandle [as _listen2] (node:net:1939:16)
+    at listenInCluster (node:net:1996:12)
+    at Server.listen (node:net:2101:7)
+    at startAdminPanel (C:\Users\GS Computer\Downloads\Telegram Desktop\botV8\bot\adminPanel.js:221:12)
+    at main (C:\Users\GS Computer\Downloads\Telegram Desktop\botV8\bot\index.js:57:5)
+2025-11-08 14:55:11 [error]: uncaughtException: listen EADDRINUSE: address already in use :::3000
+Error: listen EADDRINUSE: address already in use :::3000
+    at Server.setupListenHandle [as _listen2] (node:net:1939:16)
+    at listenInCluster (node:net:1996:12)
+    at Server.listen (node:net:2101:7)
+    at startAdminPanel (C:\Users\GS Computer\Downloads\Telegram Desktop\botV8\bot\adminPanel.js:221:12)
+    at main (C:\Users\GS Computer\Downloads\Telegram Desktop\botV8\bot\index.js:67:5)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at Error: listen EADDRINUSE: address already in use :::3000
+    at Server.setupListenHandle [as _listen2] (node:net:1939:16)
+    at listenInCluster (node:net:1996:12)
+    at Server.listen (node:net:2101:7)
+    at startAdminPanel (C:\Users\GS Computer\Downloads\Telegram Desktop\botV8\bot\adminPanel.js:221:12)
+    at main (C:\Users\GS Computer\Downloads\Telegram Desktop\botV8\bot\index.js:67:5)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
