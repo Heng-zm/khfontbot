@@ -1,0 +1,38 @@
+# Node
+node_modules/
+
+# Env and runtime data
+.env
+.db.json
+combined.log
+error.log
+exceptions.log
+
+# Process/log artifacts
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage and build output
+coverage/
+dist/
+build/
+
+# OS/editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Project-specific runtime folders
+pending_fonts/
+# If you want to keep the folder, add a .gitkeep inside and negate it:
+# !pending_fonts/.gitkeep
+
+# Optional caches
+.cache/
+.tmp/
