@@ -74,7 +74,7 @@ module.exports = (bot) => async (msg) => {
         
         // --- Font & System Management ---
         case '/refresh': {
-            initializeCache();
+            await initializeCache();
             logger.warn(`Admin action: REFRESH_CACHE`, { admin: user });
             eventEmitter.emit('dataChanged', { type: 'FONTS' });
             return bot.sendMessage(chatId, strings.cacheRefreshed);

@@ -1,6 +1,6 @@
 // handlers/inlineHandler.js
 
-const { getFontCache } = require('../services/fontService');
+const { getFontCache, getFontPath } = require('../services/fontService');
 const { v4: uuidv4 } = require('uuid');
 const { logger } = require('../services/logger');
 const path = require('path');
@@ -22,7 +22,7 @@ module.exports = (bot) => async (query) => {
                 let fileId = fileIdCache.get(font);
                 if (!fileId) {
                     try {
-                        const filePath = path.join(process.env.FONT_DIRECTORY, font);
+                        const filePath = await getFontPath(font);
                         const tempMsg = await bot.sendDocument(query.from.id, filePath);
                         if (tempMsg.document) {
                             fileId = tempMsg.document.file_id;

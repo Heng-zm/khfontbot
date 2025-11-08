@@ -3,67 +3,88 @@
 const fs = require('fs');
 const path = require('path');
 const { logger } = require('./logger');
+const dropbox = require('./dropboxService');
 
 let fontCache = [];
 // This object will store the current list a user is browsing (e.g., search results or all fonts)
 let userSessionData = {};
 
+function usingDropbox() {
+  return dropbox.isEnabled();
+}
+
+function getLocalDirectory() {
+  return process.env.FONT_DIRECTORY;
+}
+
 /**
- * Reads the font directory, sorts the files, and updates the in-memory font cache.
- * This function is called on startup and on admin's /refresh command.
+ * Update the in-memory font cache from either local directory or Dropbox.
  */
-function initializeCache() {
-    logger.info("Refreshing font cache...");
-    try {
-        const fontDirectory = process.env.FONT_DIRECTORY;
-        if (!fs.existsSync(fontDirectory)) {
-            logger.error(`Font directory not found: ${fontDirectory}`);
-            fontCache = [];
-            return;
-        }
-        fontCache = fs.readdirSync(fontDirectory)
-            .filter(file => /\.(ttf|otf)$/i.test(file)) // Filter for .ttf and .otf files
-            .sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' })); // Natural sort
-        
-        logger.info(`Cache updated. Found ${fontCache.length} fonts.`);
-    } catch (error) {
-        logger.error(`Failed to refresh font cache: ${error.message}`);
-        fontCache = []; // Ensure cache is empty on error
+async function initializeCache() {
+  logger.info('Refreshing font cache...');
+  try {
+    if (usingDropbox()) {
+      const names = await dropbox.syncCache();
+      fontCache = names;
+      logger.info(`Cache updated from Dropbox. Found ${fontCache.length} fonts.`);
+    } else {
+      const fontDirectory = getLocalDirectory();
+      if (!fontDirectory || !fs.existsSync(fontDirectory)) {
+        logger.error(`Font directory not found: ${fontDirectory}`);
+        fontCache = [];
+        return;
+      }
+      fontCache = fs.readdirSync(fontDirectory)
+        .filter(file => /\.(ttf|otf)$/i.test(file))
+        .sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
+      logger.info(`Cache updated. Found ${fontCache.length} fonts.`);
     }
+  } catch (error) {
+    logger.error(`Failed to refresh font cache: ${error.message}`);
+    fontCache = [];
+  }
 }
 
 /**
  * Returns the full list of cached font filenames.
- * @returns {string[]}
  */
 function getFontCache() {
-    return fontCache;
+  return fontCache;
+}
+
+/**
+ * Given a filename, return a local filesystem path that points to the font.
+ * If Dropbox is enabled, this ensures the font is cached locally first.
+ */
+async function getFontPath(filename) {
+  if (usingDropbox()) {
+    await dropbox.ensureCached(filename);
+    return dropbox.getCachedPath(filename);
+  }
+  return path.join(getLocalDirectory(), filename);
 }
 
 /**
  * Stores a list of fonts for a specific user's session.
- * @param {number} chatId
- * @param {string[]} files
  */
 function setUserSession(chatId, files) {
-    userSessionData[chatId] = files;
+  userSessionData[chatId] = files;
 }
 
 /**
  * Retrieves the list of fonts for a specific user's session.
- * @param {number} chatId
- * @returns {string[] | undefined}
  */
 function getUserSession(chatId) {
-    return userSessionData[chatId];
+  return userSessionData[chatId];
 }
 
-// Initial cache load on startup
-initializeCache();
+// Do not auto-run initializeCache here, callers should await it on startup
 
 module.exports = {
-    initializeCache,
-    getFontCache,
-    setUserSession,
-    getUserSession,
+  initializeCache,
+  getFontCache,
+  setUserSession,
+  getUserSession,
+  getFontPath,
+  usingDropbox,
 };

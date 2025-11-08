@@ -18,7 +18,7 @@ if (!token || !ADMIN_ID) { logger.error("FATAL: Missing TELEGRAM_BOT_TOKEN or AD
 
 async function main() {
     await db.initializeDatabase();
-    initializeCache();
+    await initializeCache();
     // Create bot with polling disabled initially so we can clear any webhook and avoid race conditions.
     const bot = new TelegramBot(token, { polling: { autoStart: false } });
     try {

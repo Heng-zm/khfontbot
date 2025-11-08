@@ -181,9 +181,17 @@ function startAdminPanel(bot) {
         const originalFileName = fileName.split('_').slice(2).join('_');
         const uploaderId = fileName.split('_')[1];
         try {
-            fs.copyFileSync(pendingFilePath, path.join(FONT_DIR, originalFileName));
-            fs.unlinkSync(pendingFilePath);
-            initializeCache();
+            const useDropbox = String(process.env.USE_DROPBOX || '').toLowerCase() === 'true';
+            if (useDropbox) {
+                const { uploadFromLocal } = require('./services/dropboxService');
+                const ok = await uploadFromLocal(pendingFilePath, originalFileName);
+                if (!ok) throw new Error('Dropbox upload failed');
+                fs.unlinkSync(pendingFilePath);
+            } else {
+                fs.copyFileSync(pendingFilePath, path.join(FONT_DIR, originalFileName));
+                fs.unlinkSync(pendingFilePath);
+            }
+            await initializeCache();
             await dbService.logUpload(uploaderId, originalFileName, 'approved');
             if (uploaderId) await dbService.addMessageToQueue(uploaderId, `🎉 ពុម្ពអក្សរ *${originalFileName}* របស់អ្នកត្រូវបាន Approve។`);
             res.json({ success: true, message: `Approved ${originalFileName}` });
