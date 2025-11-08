@@ -1,6 +1,12 @@
 // services/imageService.js
 
-const { createCanvas, registerFont } = require('canvas');
+let createCanvas, registerFont;
+let CANVAS_AVAILABLE = true;
+try {
+    ({ createCanvas, registerFont } = require('canvas'));
+} catch (e) {
+    CANVAS_AVAILABLE = false;
+}
 const path = require('path');
 const strings = require('../localization');
 const { logger } = require('./logger');
@@ -10,12 +16,14 @@ const { logger } = require('./logger');
 let fallbackFontFamily = 'sans-serif'; // Use a generic system font as a last resort.
 const fallbackFontPath = path.join(__dirname, '..', 'assets', 'KhmerOSSiemreap-Regular.ttf');
 
-try {
-    registerFont(fallbackFontPath, { family: 'KhmerOSFallback' });
-    fallbackFontFamily = 'KhmerOSFallback'; // Only assign the custom name if registration succeeds.
-    logger.info('Khmer fallback font registered successfully.');
-} catch (error) {
-    logger.warn(`Could not register Khmer fallback font. Previews may not show Khmer text correctly. Error: ${error.message}`);
+if (CANVAS_AVAILABLE) {
+    try {
+        registerFont(fallbackFontPath, { family: 'KhmerOSFallback' });
+        fallbackFontFamily = 'KhmerOSFallback'; // Only assign the custom name if registration succeeds.
+        logger.info('Khmer fallback font registered successfully.');
+    } catch (error) {
+        logger.warn(`Could not register Khmer fallback font. Previews may not show Khmer text correctly. Error: ${error.message}`);
+    }
 }
 
 /**
@@ -24,6 +32,11 @@ try {
  * @returns {Buffer} A PNG image buffer.
  */
 function createErrorImage(errorMessage) {
+    if (!CANVAS_AVAILABLE) {
+        // 1x1 transparent PNG
+        const PNG_1x1 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR4nGNgYAAAAAMAASsJTYQAAAAASUVORK5CYII=';
+        return Buffer.from(PNG_1x1, 'base64');
+    }
     const canvas = createCanvas(700, 220);
     const ctx = canvas.getContext('2d');
     ctx.fillStyle = '#f8d7da'; // Light red background
@@ -52,6 +65,11 @@ function createErrorImage(errorMessage) {
  * @returns {Buffer} A PNG image buffer.
  */
 function generateFontPreview(fontPath, fontName) {
+    if (!CANVAS_AVAILABLE) {
+        logger.warn('Canvas is not available; returning minimal placeholder preview.');
+        const PNG_1x1 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR4nGNgYAAAAAMAASsJTYQAAAAASUVORK5CYII=';
+        return Buffer.from(PNG_1x1, 'base64');
+    }
     let targetFontFamily;
 
     // Attempt to register the target font.

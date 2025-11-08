@@ -26,7 +26,7 @@ function startAdminPanel(bot) {
     const server = http.createServer(app); // Create an HTTP server from the Express app
     const wss = new WebSocketServer({ server }); // Attach the WebSocket server to the HTTP server
 
-    const PORT = process.env.ADMIN_PANEL_PORT || 3000;
+    const PORT = process.env.PORT || process.env.ADMIN_PANEL_PORT || 3000;
     
     // Define paths directly for clarity and robustness.
     const FONT_DIR = process.env.FONT_DIRECTORY;

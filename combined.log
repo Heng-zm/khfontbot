@@ -1413,3 +1413,45 @@
 2025-11-08 15:17:45 [info] (User: 1272791365, @N/A): Processing callback: "page_2"
 2025-11-08 15:17:46 [info] (User: 1272791365, @N/A): Processing callback: "get_16_2"
 2025-11-08 15:17:50 [warn] (User: 1272791365, @N/A): EditMessageMedia failed. Falling back to delete/send. Error: ETELEGRAM: 400 Bad Request: can't parse InputMedia: Field "media" must be of type String
+2025-11-08 15:18:18 [error]: Polling Error: ETELEGRAM - ETELEGRAM: 409 Conflict: terminated by other getUpdates request; make sure that only one bot instance is running
+2025-11-08 15:18:22 [error]: Polling Error: ETELEGRAM - ETELEGRAM: 409 Conflict: terminated by other getUpdates request; make sure that only one bot instance is running
+2025-11-08 15:18:22 [error]: Detected 409 Conflict (another getUpdates). Pausing polling for 60s to avoid thrash.
+2025-11-08 15:19:26 [error]: Polling Error: ETELEGRAM - ETELEGRAM: 409 Conflict: terminated by other getUpdates request; make sure that only one bot instance is running
+2025-11-08 15:19:29 [error]: Polling Error: ETELEGRAM - ETELEGRAM: 409 Conflict: terminated by other getUpdates request; make sure that only one bot instance is running
+2025-11-08 15:19:29 [error]: Detected 409 Conflict (another getUpdates). Pausing polling for 60s to avoid thrash.
+2025-11-08 15:20:33 [error]: Polling Error: ETELEGRAM - ETELEGRAM: 409 Conflict: terminated by other getUpdates request; make sure that only one bot instance is running
+2025-11-08 15:20:37 [error]: Polling Error: ETELEGRAM - ETELEGRAM: 409 Conflict: terminated by other getUpdates request; make sure that only one bot instance is running
+2025-11-08 15:20:37 [error]: Detected 409 Conflict (another getUpdates). Pausing polling for 60s to avoid thrash.
+2025-11-08 15:21:41 [error]: Polling Error: ETELEGRAM - ETELEGRAM: 409 Conflict: terminated by other getUpdates request; make sure that only one bot instance is running
+2025-11-08 15:21:45 [error]: Polling Error: ETELEGRAM - ETELEGRAM: 409 Conflict: terminated by other getUpdates request; make sure that only one bot instance is running
+2025-11-08 15:21:45 [error]: Detected 409 Conflict (another getUpdates). Pausing polling for 60s to avoid thrash.
+2025-11-08 15:22:49 [error]: Polling Error: ETELEGRAM - ETELEGRAM: 409 Conflict: terminated by other getUpdates request; make sure that only one bot instance is running
+2025-11-08 15:22:52 [error]: Polling Error: ETELEGRAM - ETELEGRAM: 409 Conflict: terminated by other getUpdates request; make sure that only one bot instance is running
+2025-11-08 15:22:52 [error]: Detected 409 Conflict (another getUpdates). Pausing polling for 60s to avoid thrash.
+2025-11-08 15:23:56 [error]: Polling Error: ETELEGRAM - ETELEGRAM: 409 Conflict: terminated by other getUpdates request; make sure that only one bot instance is running
+2025-11-08 15:24:00 [error]: Polling Error: ETELEGRAM - ETELEGRAM: 409 Conflict: terminated by other getUpdates request; make sure that only one bot instance is running
+2025-11-08 15:24:00 [error]: Detected 409 Conflict (another getUpdates). Pausing polling for 60s to avoid thrash.
+2025-11-08 15:25:04 [error]: Polling Error: ETELEGRAM - ETELEGRAM: 409 Conflict: terminated by other getUpdates request; make sure that only one bot instance is running
+2025-11-08 15:25:07 [error]: Polling Error: ETELEGRAM - ETELEGRAM: 409 Conflict: terminated by other getUpdates request; make sure that only one bot instance is running
+2025-11-08 15:25:07 [error]: Detected 409 Conflict (another getUpdates). Pausing polling for 60s to avoid thrash.
+2025-11-08 15:26:11 [error]: Polling Error: ETELEGRAM - ETELEGRAM: 409 Conflict: terminated by other getUpdates request; make sure that only one bot instance is running
+2025-11-08 15:26:15 [error]: Polling Error: ETELEGRAM - ETELEGRAM: 409 Conflict: terminated by other getUpdates request; make sure that only one bot instance is running
+2025-11-08 15:26:15 [error]: Detected 409 Conflict (another getUpdates). Pausing polling for 60s to avoid thrash.
+2025-11-08 15:27:19 [error]: Polling Error: ETELEGRAM - ETELEGRAM: 409 Conflict: terminated by other getUpdates request; make sure that only one bot instance is running
+2025-11-08 15:27:23 [error]: Polling Error: ETELEGRAM - ETELEGRAM: 409 Conflict: terminated by other getUpdates request; make sure that only one bot instance is running
+2025-11-08 15:27:23 [error]: Detected 409 Conflict (another getUpdates). Pausing polling for 60s to avoid thrash.
+2025-11-08 15:28:27 [error]: Polling Error: ETELEGRAM - ETELEGRAM: 409 Conflict: terminated by other getUpdates request; make sure that only one bot instance is running
+2025-11-08 15:28:30 [error]: Polling Error: ETELEGRAM - ETELEGRAM: 409 Conflict: terminated by other getUpdates request; make sure that only one bot instance is running
+2025-11-08 15:28:30 [error]: Detected 409 Conflict (another getUpdates). Pausing polling for 60s to avoid thrash.
+2025-11-08 15:29:34 [error]: Polling Error: ETELEGRAM - ETELEGRAM: 409 Conflict: terminated by other getUpdates request; make sure that only one bot instance is running
+2025-11-08 15:29:38 [error]: Polling Error: ETELEGRAM - ETELEGRAM: 409 Conflict: terminated by other getUpdates request; make sure that only one bot instance is running
+2025-11-08 15:29:38 [error]: Detected 409 Conflict (another getUpdates). Pausing polling for 60s to avoid thrash.
+2025-11-08 15:30:42 [error]: Polling Error: ETELEGRAM - ETELEGRAM: 409 Conflict: terminated by other getUpdates request; make sure that only one bot instance is running
+2025-11-08 15:30:45 [error]: Polling Error: ETELEGRAM - ETELEGRAM: 409 Conflict: terminated by other getUpdates request; make sure that only one bot instance is running
+2025-11-08 15:30:45 [error]: Detected 409 Conflict (another getUpdates). Pausing polling for 60s to avoid thrash.
+2025-11-08 15:31:50 [error]: Polling Error: ETELEGRAM - ETELEGRAM: 409 Conflict: terminated by other getUpdates request; make sure that only one bot instance is running
+2025-11-08 15:31:53 [error]: Polling Error: ETELEGRAM - ETELEGRAM: 409 Conflict: terminated by other getUpdates request; make sure that only one bot instance is running
+2025-11-08 15:31:53 [error]: Detected 409 Conflict (another getUpdates). Pausing polling for 60s to avoid thrash.
+2025-11-08 15:32:57 [error]: Polling Error: ETELEGRAM - ETELEGRAM: 409 Conflict: terminated by other getUpdates request; make sure that only one bot instance is running
+2025-11-08 15:33:01 [error]: Polling Error: ETELEGRAM - ETELEGRAM: 409 Conflict: terminated by other getUpdates request; make sure that only one bot instance is running
+2025-11-08 15:33:01 [error]: Detected 409 Conflict (another getUpdates). Pausing polling for 60s to avoid thrash.
